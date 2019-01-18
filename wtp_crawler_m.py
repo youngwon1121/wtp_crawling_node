@@ -35,10 +35,6 @@ if __name__ == "__main__":
 	
 	keyword = sys.argv[1]
 	target_url = sys.argv[2]
-	'''
-	keyword = "부산 눈썹문신"
-	target_url = "https://m.blog.naver.com/alwls1546/221441211608"
-	'''
 
 	links = get_links(keyword)
 	rank = get_rank(links, target_url)

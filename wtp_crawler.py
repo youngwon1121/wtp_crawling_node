@@ -105,11 +105,6 @@ def main_processing(func, link_arr, start_idx):
 if __name__ == '__main__':
 	start_time = time.time()
 	
-	'''
-	keyword = "불량식품"
-	target_url = "kin.naver.com/qna/detail.nhn?d1id=13&dirId=130504&docId=195806488"
-	searching_type = "3"
-	'''
 	keyword = sys.argv[1]
 	target_url = sys.argv[2]
 	searching_type = sys.argv[3]
