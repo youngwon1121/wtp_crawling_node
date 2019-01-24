@@ -14,9 +14,8 @@
     "cors": "^2.8.5",
     "ejs": "^2.6.1",
     "express": "^4.16.4",
-    "mysql": "^2.16.0",
+    "jsonwebtoken": "^8.4.0",
     "mysql2": "^1.6.4",
-    "node-cmd": "^3.0.0",
     "python-shell": "^1.0.7"
   }
 }

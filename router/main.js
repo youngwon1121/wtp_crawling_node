@@ -9,7 +9,7 @@ module.exports = function(app, pool, main_table){
 		var query_object = {}
 
 		var query_list = parsed_object.query.split('&');
-		for(var query of query_list){
+		for(var query of qu4ery_list){
 			splited = query.split('=')
 			key = splited[0];
 			value = splited[1];
@@ -41,8 +41,8 @@ module.exports = function(app, pool, main_table){
 			try {
 				var connection = await pool.getConnection(async conn => conn);
 				try {
-					var qry = `SELECT * FROM ${main_table} ORDER BY id DESC`
-					const [rows] = await connection.query(qry);
+					var qry = `SELECT * FROM ${main_table} WHERE owner = ? ORDER BY id DESC`
+					const [rows] = await connection.query(qry, [req.decoded.username]);
 					connection.release();
 					return {
 						success : 1,
@@ -51,28 +51,21 @@ module.exports = function(app, pool, main_table){
 				} catch(err) {
 					console.log('Query Error');
 					connection.release();
-					return {
-						success : 0,
-						result : err
-					};
+					throw err
 				}
 			} catch(err) {
 				console.log('DB Error');
 				console.log(err);
-				return {
-					success : 0,
-					result : err
-				};
+				throw err
 			}
 		}
 
 		getAllBlogs().then((result) => {
-			if(result.success == 1){
-				return res.status(200).json(result)
-			}
-			else{
-				return res.status(400).json(result);
-			}
+			return res.status(200).json(result)
+		})
+		.catch(err => {
+			console.log(err.message)
+			return res.status(400).json({success : 0, msg : err.message});
 		})
 	})
 
@@ -85,8 +78,8 @@ module.exports = function(app, pool, main_table){
 					if(main_table == "nv_kin")
 						req.body.target_url = fixTargetUrl(req.body.target_url);
 
-					var data = [req.body.keyword, req.body.target_url];
-					var qry = `INSERT INTO ${main_table}(keyword, target_url, date) VALUES(?, ?, NOW())`
+					var data = [req.body.keyword, req.body.target_url, req.decoded.username];
+					var qry = `INSERT INTO ${main_table}(keyword, target_url, date, owner) VALUES(?, ?, NOW(), ?)`
 					const [rows] = await connection.query(qry, data);
 					connection.release();
 					return {
@@ -95,32 +88,25 @@ module.exports = function(app, pool, main_table){
 					};
 				} catch(err) {
 					console.log('Query Error');
-					console.log(err);
 					connection.release();
-					return {
-						success : 0,
-						result : err
-					};
+					throw err
 				}
 
 			} catch(err) {
 				console.log('DB Error');
-				return {
-					success : 0,
-					result : err
-				};
+				throw err
 			}
 		};
 
 		postBlog().then((result) => {
-			if(result.success == 1){
-				return res.status(201).json(result)
-			}
-			else{
-				return res.status(400).json(result);
-			}
+			return res.status(201).json(result)	
+		})
+		.catch(err => {
+			console.log(err.message);
+			return res.status(400).json({success : 0, msg : err.message})
 		})
 	})
+
 	//블로그 선택삭제
 	router.delete('/', (req, res) => {
 		const delSelectedBlogs = async () => {
@@ -128,52 +114,28 @@ module.exports = function(app, pool, main_table){
 				const connection = await pool.getConnection(async conn => conn);
 				try {
 					var del_list = req.body.del_list.join(',');
-					var qry = `DELETE FROM ${main_table} where id in (${del_list})`
-					const [rows] = await connection.query(qry);
+					var qry = `DELETE FROM ${main_table} where id in (${del_list}) AND owner=?`
+					console.log(qry);
+					const [rows] = await connection.query(qry, [req.decoded.username]);
 					connection.release();
 					return {success : 1};
 				} catch(err) {
 					console.log('Query Error');
 					connection.release();
-					return {success : 0};
+					return err
 				}
 			} catch(err) {
 				console.log('DB Error');
-				return {success : 0};
+				return err
 			}
 		}
+
 		delSelectedBlogs().then((result) => {
-			if(result.success == 1)
-				return res.status(200).json(result);
-			else
-				return res.status(400).json(result);
+			return res.status(200).json(result);
 		})
-	})
-
-	//블로그 삭제
-	router.delete('/:id', (req, res) => {
-		const delBlog = async () => {
-			try {
-				const connection = await pool.getConnection(async conn => conn);
-				try {
-					var data = [req.params.id];
-					var qry = `DELETE FROM ${main_table} where id = ?`
-					const [rows] = await connection.query(qry, data);
-					connection.release();
-					return rows;
-				} catch(err) {
-					console.log('Query Error');
-					connection.release();
-					return err;
-				}
-
-			} catch(err) {
-				console.log('DB Error');
-				return err;
-			}
-		}
-		del().then((result) => {
-			return res.status(200).json({success:1, result : result});
+		.catch(err => {
+			console.log(err.message);
+			return res.status(200).json({success : 0, msg : err.message})
 		})
 	})
 

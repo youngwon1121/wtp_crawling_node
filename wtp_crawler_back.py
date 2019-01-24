@@ -16,17 +16,19 @@ def fix_kin_url(kin_url):
 	base_url = url.netloc + url.path + "?d1id="+ query_obj['d1id'] + "&dirId=" + query_obj['dirId'] + "&docId=" + query_obj['docId']
 	return base_url
 
-def calc_rank(rank_arr):
-	final_rank = 0
-	if rank_arr == [11, 11, 11, 11, 11, 11, 11, 11, 11, 11]:
-		return final_rank
-	for rank in rank_arr:
-		if rank == 11:
-			final_rank += 10
-		else : 
-			final_rank += rank
+def calc_rank(rank_arr, base = 0):
+	rank = base
+	if rank_arr == [11, 11, 11, 11, 11] and base == 50:
+		rank = 0
+		return rank
+
+	for i in rank_arr:
+		if i == 11:
+			rank += 10
+		else:
+			rank += i
 			break
-	return final_rank
+	return rank
 
 def get_links(keyword, searching_type):
 	links = []
@@ -86,16 +88,6 @@ def get_rank(target_url, rank, wrap_name, url):
 		rank+=1
 	return rank
 
-def main_processing(func, link_arr, start_idx):
-	end_idx = start_idx+3
-	if start_idx == 6:
-		end_idx = 10
-	links = link_arr[start_idx:end_idx]
-	pool = Pool(processes=3)
-	rank = pool.map(func, links)
-	pool.close()
-	pool.join()
-	return rank
 '''
 	searching_type :
 		1 blog
@@ -113,7 +105,6 @@ if __name__ == '__main__':
 	keyword = sys.argv[1]
 	target_url = sys.argv[2]
 	searching_type = sys.argv[3]
-	
 
 	if searching_type == "1":
 		wrap_name = "_blogBase"
@@ -123,23 +114,30 @@ if __name__ == '__main__':
 		wrap_name = "_kinBase"
 
 	rank = 1
-	#func는 target_url, rank=1, wrap_name을 이미 맵핑해놓은 함수임
 	func = partial(get_rank, target_url, rank, wrap_name)
+	
 	links = get_links(keyword, searching_type)
+	links1 = links[:5]
+	links2 = links[5:10]
 
-	#rank_arr이 main_processing의 반환값
-	rank_arr = []
-	idx=0
-	while 1:
-		if idx == 6:
-			#마지막 프로세스에 프로세스 4개배정
-			rank_arr[idx:idx+4] = main_processing(func, links, idx)
-			break
-		else:
-			rank_arr[idx:idx+3] = main_processing(func, links, idx)
-			#이미 찾은경우
-			if rank_arr[idx:idx+3] != [11, 11, 11]:
-				break
-			idx += 3
+	pool = Pool(processes=4)
+	rank1 = pool.map(func, links1)
+	pool.close()
+	pool.join()
 
-	print(calc_rank(rank_arr))
+	#first try
+	if [11, 11, 11, 11, 11] != rank1:
+		#terminating when found in first try
+		#print(rank1)
+		print(calc_rank(rank1))
+		print("%s" %(time.time()-start_time))
+	else:
+		#second try
+		pool = Pool(processes=6)
+		rank2 = pool.map(func, links2)
+		pool.close()
+		pool.join()
+
+		#print(rank2)
+		print(calc_rank(rank2, 50))
+		print("%s" %(time.time()-start_time))
