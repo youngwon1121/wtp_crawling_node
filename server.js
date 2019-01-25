@@ -21,7 +21,7 @@ app.use('/api',validate_middleware)
 
 //auth api
 var auth_router = require('./router/auth.js')(app, pool)
-app.use('/auth', auth_router)
+app.use('/auth', auth_router)123
 
 var cafe_router = require('./router/main.js')(app, pool, 'nv_cafe');
 app.use('/api/cafe', cafe_router);
