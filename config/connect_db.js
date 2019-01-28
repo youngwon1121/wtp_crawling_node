@@ -1,5 +1,5 @@
-var dbconfig = require('../config/database.js');
-var mysql = require('mysql2/promise');
-var pool = mysql.createPool(dbconfig);
+const dbconfig = require('../config/database.js');
+const mysql = require('mysql2/promise');
+const pool = mysql.createPool(dbconfig);
 
 module.exports = pool;

@@ -1,6 +1,6 @@
-var router = require('express').Router();
-let jwt = require('jsonwebtoken')
-let secretObj = require('../config/jwt_auth')
+const router = require('express').Router();
+const jwt = require('jsonwebtoken')
+const secretObj = require('../config/jwt_auth')
 
 //pool만 가져다가 쓸수있게 수정
 const pool = require('../config/connect_db');
@@ -8,11 +8,11 @@ const pool = require('../config/connect_db');
 //issuing token
 router.post('/login', (req, res) => {
 	//체크하기
-	var username = req.body.username
-	var password = req.body.password
+	let username = req.body.username
+	let password = req.body.password
 	
 	//토큰생성
-	var token = jwt.sign({
+	let token = jwt.sign({
 		username: username
 	},
 	secretObj.secret,
@@ -24,7 +24,7 @@ router.post('/login', (req, res) => {
 		try {
 			const connection = await pool.getConnection(async conn => conn);
 			try {
-				var qry = `SELECT * FROM user WHERE username=?`
+				let qry = `SELECT * FROM user WHERE username=?`
 				const [rows] = await connection.query(qry, [username]);
 				connection.release();
 				return rows

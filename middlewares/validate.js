@@ -3,15 +3,16 @@ const secretObj = require('../config/jwt_auth')
 
 //table이름을 middleware에서 찾아서 req에 넣어둠
 function getTableName(curr_url){
-	var splited = curr_url.split('/')[2]
+	const splited = curr_url.split('/')[2]
+	let table_name
 	if(splited == "blogs")
-		var table_name = "nv_blog"
+		table_name = "nv_blog"
 	else if(splited == "cafe")
-		var table_name = "nv_cafe"
+		table_name = "nv_cafe"
 	else if(splited == "kin")
-		var table_name = "nv_kin"
+		table_name = "nv_kin"
 	else if(splited == "mview")
-		var table_name = "nv_m_view"
+		table_name = "nv_m_view"
 	return table_name
 }
 
@@ -19,7 +20,7 @@ const authMiddleware = (req, res, next) => {
 	const token = req.headers['x-access-token'] || req.query.token
 
 	if(!token){
-		console.log('cannot fount token')
+		console.log('could not find token')
 		return false;
 	}
 
