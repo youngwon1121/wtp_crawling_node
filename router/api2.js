@@ -81,28 +81,43 @@ router
 
 router
     .put('/rank', (req, res) => {
-        models.cafe_cmt.findAll({}).then(results => {
-            results.forEach(item => {
-                let script_name = 'cafe_comment_crawler.py'
-                let options = {
-                    mode : 'text',
-                    pythonOptions : ['-u'],
-                    args : [item.target_url]
-                }
-                executePy(script_name, options).then(result => {
-                    let comment = result.join('\n')
-                    return models.cafe_cmt.update({comment : comment},{
-                        where : {id : item.id}
+
+        const updateAll = function(cmtData, callback){
+            return new Promise((resolve, reject) => {
+                let cnt = 0;
+                cmtData.forEach((item) => {
+                    let script_name = 'cafe_comment_crawler.py'
+                    let options = {
+                        mode : 'text',
+                        pythonOptions : ['-u'],
+                        args : [item.target_url]
+                    }
+                    executePy(script_name, options).then(result => {
+                        let comment = result.join('\n')
+                        return models.cafe_cmt.update({comment : comment},{
+                            where : {id : item.id}
+                        })
+                    }).then(result => {
+                        cnt++
+                        if(cmtData.length === cnt){
+                            resolve(cnt)
+                        }
                     })
-                }).then(updateResult => {
-                    console.log(updateResult)
-                }).catch(err => {
-                    console.log(err.message)
-                    return res.status(500).send('업데이트중에 알수없는 오류 발생')
+                    .catch(err => {
+                        reject(err)
+                    })
                 })
-            });
+            })         
+        }
+
+        models.cafe_cmt.findAll({}).then(results => {
+            return updateAll(results)
+        })
+        .then(result => {
+            console.log(result);
             return res.status(200).send('success');
-        }).catch(err => {
+        })
+        .catch(err => {
             return res.status(500).send('internal error')
         })
     })
